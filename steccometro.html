@@ -7,6 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Steccometro">
 <meta name="theme-color" content="#1a1a1a">
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAAErUlEQVR4nO3bS3IUMRCE4TbBKWbvI/mUHIm7ECyaGBo81W6p9chU/d/KC3CUSqmqIYJ5ezweG/DKt9kFQBfhQIhwIEQ4ECIcCBEOhAgHQoQDIcKBEOFAiHAgRDj+8fPHr9klCCEcCBGOv/axwfB4IhwIEQ6ECMcfx23CZtkRDoQIx7YxKgKE4zXishEOnCAcDIkQ4QgRGsKBUPZwMB5OZA/HueTRIRwIpQ7HlcGQeXikDgfO5Q1H5pFwUd5wXJc2RoQDoaThSDsMiiQNR6mcYSIcCGUMR84xUCFjOOokjBThQChdOBIOgGrpwnFHtmDlCke2270pVzhQhHCUSTV7EoUj1b02kSgcKEU4iuWZQFnCkedGG8oSDlRIEY7mYyPJHEoRDtQhHAitH45OKyDDZlk/HKhGOOotPzwWD8fy99fV4uHAHYTjlrUn08rhWPvmBlg5HLhp2XAMGxsLz6dlw4H7CAdCa4Zj8KhfdbOsGQ408fZ4PK7/6VWfSB7vHwXjoGxyFP1qqCm9vrLJ8cQI8VL3qisnASPESPVl1d8x+bBw55oq18oRK0bT/dfb4PUzQgQ1uZQ290o+pLS6jgZr5YgVM1fbV9r4xTNCJmre/PZ3ST6m6NH2xmvliBUzRr/X2PGVM0IG6NrkvvdHPrrq3d6Oa+WIFdPWmFc36GUzQhoa1sxxd0Y+mhjZxkFr5YgVU2f865rwmhkhFaY0bc49kY8is9o17ZLIx0UTGzXhM8d/+AgSmf5+5j/f6S3QpNCW+RVsGo2QItKQ+WvliBUjEoudUCmbWGvGUzu+VjWbXoOGETy41lo5yrNiBGOxEy1rE25ZW8rH1K1s025cE+IH1F0rR+utGPFY7AxK3ExaeZ3LcTyq3Hwa+iWjg3islSPfFWMUi51ZuZthi3eOZftVjGH8wmG6VhzL9gsHhiEcCBEOhMzC4bi5n+yKNwsHRiIcCDmFw24sf+Z1BKdwYDDCgZBNOLwG8gmjg9iEA+MRDoQIB0Ie4TDa01e4HMcjHJiCcCBkEA6XIVzE4lAG4cAshAMh9XBYjN86+kdTD8dgjl8g6Of77AJUPGOx/6D/rAfgoWzbq4HBCNnEvw454Pl+GYLeNSinULeyAa5cjPLl9Zb05O8f367fetp86K6VfvO8+rI7lSQbPtGyOikaGC//esNi9CU6bZOrvRkvL1nO2fZGk+RD9DNHw+3e7yItirxDsaaGujZ9+RWz7NmG3dzC+VBcK/fH9ZQLu1m2YMjkCrpp4qgXvN2bljrP9OtZ7FOI3Emqh7POrdRVIvifBFQaeofge1Wrp479GWSvQTCypYyrt+i+foUntP4pe33v2jX94tGkziVUykUWA+Mzx5rNKnZs8ZNd8UJr5Xzw2nX2hMtJVeo4p9OvJlyOY1ClSyuLWHxyUlkrLyetfvvuUz64RBEviTSoN+VjKn4dUrlfPch+AVPuGrIl40nw4BKfOfZHI9idKXS6Mb+CnUIvROi0QmJyQJNKSCGIcCBEOBAiHAgRDoQIB0KEAyHCgRDhQIhwIEQ4ECIcCBEOhAgHQoQDIcKBEOFAiHAgRDgQIhwIEQ6ECAdChAMhwoEQ4UDoN5+sG9ZR2IbrAAAAAElFTkSuQmCC">
 <title>Steccometro</title>
 <style>
   :root {
@@ -29,9 +30,9 @@
     --safe-top: env(safe-area-inset-top, 0px);
     --safe-bot: env(safe-area-inset-bottom, 0px);
   }
-
+ 
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-
+ 
   body {
     font-family: 'Courier New', monospace;
     background-color: #3a3a3a;
@@ -43,7 +44,7 @@
     overflow: hidden;
     position: relative;
   }
-
+ 
   /* dark overlay on camo image */
   body::before {
     content: '';
@@ -52,7 +53,7 @@
     pointer-events: none;
     z-index: 0;
   }
-
+ 
   .app {
     position: relative; z-index: 1;
     display: flex; flex-direction: column;
@@ -60,7 +61,7 @@
     padding-top: var(--safe-top);
     padding-bottom: var(--safe-bot);
   }
-
+ 
   /* HEADER */
   .header {
     display: flex; align-items: center; justify-content: space-between;
@@ -70,28 +71,28 @@
     backdrop-filter: blur(4px);
     flex-shrink: 0;
   }
-
+ 
   .header-star {
     font-size: 28px; line-height: 1;
   }
-
+ 
   .header-title {
     font-size: 24px; font-weight: 900; letter-spacing: 4px;
     color: var(--gold); text-transform: uppercase; text-shadow: 0 2px 8px rgba(0,0,0,0.8);
   }
-
+ 
   .header-right { width: 36px; text-align: right; }
-
+ 
   /* VIEWS */
   .view { display: none; flex-direction: column; flex: 1; overflow: hidden; }
   .view.active { display: flex; }
-
+ 
   /* LIST VIEW */
   .missions-list {
     flex: 1; overflow-y: auto; padding: 12px;
     display: flex; flex-direction: column; gap: 10px;
   }
-
+ 
   .mission-card {
     background: var(--card);
     border: 1px solid var(--border);
@@ -102,7 +103,7 @@
     transition: background 0.15s;
   }
   .mission-card:active { background: rgba(245,197,24,0.1); }
-
+ 
   .mission-card-flag { font-size: 28px; line-height: 1; flex-shrink: 0; }
   .mission-card-info { flex: 1; min-width: 0; }
   .mission-card-name {
@@ -111,7 +112,7 @@
   }
   .mission-card-sub { font-size: 13px; color: var(--textDim); margin-top: 3px; font-weight: bold; }
   .mission-card-arrow { color: var(--textDim); font-size: 18px; }
-
+ 
   .btn-add {
     position: fixed; bottom: calc(20px + var(--safe-bot)); right: 20px;
     width: 52px; height: 52px; border-radius: 50%;
@@ -136,23 +137,23 @@
     box-shadow: 0 2px 12px rgba(0,0,0,0.5);
   }
   .btn-totale:active { transform: scale(0.95); }
-
+ 
   .empty-state {
     text-align: center; padding: 40px 20px;
     color: var(--textDim); font-size: 13px; line-height: 1.8;
   }
   .empty-star { font-size: 40px; margin-bottom: 8px; }
-
+ 
   /* FORM VIEW */
   .form-scroll { flex: 1; overflow-y: auto; padding: 10px 14px; }
-
+ 
   .form-group { margin-bottom: 10px; }
   .form-label {
     font-size: 12px; letter-spacing: 2px; color: var(--gold);
     text-transform: uppercase; margin-bottom: 4px; display: block;
   }
   .form-row { display: flex; gap: 8px; align-items: flex-start; }
-
+ 
   input, select {
     width: 100%;
     background: rgba(26,36,16,0.9);
@@ -167,7 +168,7 @@
   }
   input:focus, select:focus { border-color: var(--gold); }
   select option { background: var(--camo1); }
-
+ 
   .flag-display {
     font-size: 28px; line-height: 38px; flex-shrink: 0;
     width: 42px; text-align: center;
@@ -175,7 +176,7 @@
     border: 1px solid var(--border);
     border-radius: 4px;
   }
-
+ 
   /* PAUSES */
   .pause-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 6px; }
   .pause-item {
@@ -197,7 +198,7 @@
     letter-spacing: 1px; font-family: 'Courier New', monospace;
     width: 100%;
   }
-
+ 
   /* ACTION BUTTONS */
   .form-actions {
     display: flex; gap: 8px; padding: 10px 14px;
@@ -209,10 +210,10 @@
   .btn-primary:active { background: var(--goldDark); }
   .btn-danger { background: transparent; border: 1px solid var(--red); color: var(--red); }
   .btn-back { background: transparent; border: 1px solid var(--border); color: var(--textDim); }
-
+ 
   /* DETAIL VIEW */
   .detail-scroll { flex: 1; overflow-y: auto; padding: 8px 12px; }
-
+ 
   .detail-header {
     display: flex; align-items: center; gap: 10px;
     margin-bottom: 10px;
@@ -220,7 +221,7 @@
   .detail-flag { font-size: 36px; }
   .detail-title { font-size: 22px; font-weight: 900; color: var(--gold); letter-spacing: 2px; text-shadow: 0 2px 6px rgba(0,0,0,0.7); }
   .detail-sub { font-size: 13px; color: var(--textDim); font-weight: bold; }
-
+ 
   /* TIMELINE BAR */
   .timeline-section {
     background: var(--card); border: 1px solid var(--border);
@@ -230,25 +231,26 @@
     font-size: 12px; letter-spacing: 2px; color: var(--gold);
     text-transform: uppercase; margin-bottom: 6px;
   }
-
-
+ 
+ 
   /* COUNTER */
   .counter-section {
     background: var(--card); border: 1px solid var(--border);
     border-radius: 6px; padding: 10px 12px; margin-bottom: 8px;
   }
-  .counter-row { display: flex; gap: 8px; }
+  .counter-row { display: flex; flex-direction: column; gap: 6px; }
   .counter-box {
-    flex: 1; text-align: center;
-    border: 1px solid var(--border); border-radius: 4px; padding: 8px 4px;
+    text-align: center;
+    border: 1px solid var(--border); border-radius: 4px; padding: 7px 8px;
   }
   .counter-val {
-    font-size: 22px; font-weight: 900; color: var(--gold);
+    font-size: 18px; font-weight: 900; color: var(--gold);
     font-family: 'Courier New', monospace; letter-spacing: 0.5px;
+    word-break: break-all;
   }
-  .counter-lbl { font-size: 12px; color: var(--textDim); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; font-weight: bold; }
-  .counter-total-val { font-size: 26px; }
-
+  .counter-lbl { font-size: 11px; color: var(--textDim); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; font-weight: bold; }
+  .counter-total-val { font-size: 18px; color: var(--textDim); }
+ 
   /* PAUSES DISPLAY */
   .pauses-section {
     background: var(--card); border: 1px solid var(--border);
@@ -260,12 +262,12 @@
     background: rgba(255,255,255,0.05); border: 1px solid var(--border);
     border-radius: 4px; padding: 3px 7px; margin: 2px;
   }
-
+ 
   .back-btn {
     background: none; border: none; color: var(--gold);
     font-size: 22px; cursor: pointer; padding: 0; line-height: 1;
   }
-
+ 
   .section-divider {
     font-size: 12px; letter-spacing: 3px; color: var(--textDim); font-weight: bold;
     text-transform: uppercase; text-align: center;
@@ -274,23 +276,23 @@
 </style>
 </head>
 <body>
-
+ 
 <div class="app">
-
+ 
   <!-- HEADER -->
   <div class="header">
     <div class="header-star" id="headerLeft">⭐</div>
     <div class="header-title" id="headerTitle">STECCOMETRO</div>
     <div class="header-right" id="headerRight"></div>
   </div>
-
+ 
   <!-- LIST VIEW -->
   <div class="view active" id="viewList">
     <div class="missions-list" id="missionsList"></div>
     <button class="btn-add" id="btnAdd" onclick="openNew()">+</button>
     <button class="btn-totale" id="btnTotale" onclick="openTotale()">TOTALE</button>
   </div>
-
+ 
   <!-- FORM VIEW (new/edit) -->
   <div class="view" id="viewForm">
     <div class="form-scroll">
@@ -337,7 +339,7 @@
       <button class="btn btn-danger" id="btnDelete" onclick="deleteMission()" style="display:none">🗑</button>
     </div>
   </div>
-
+ 
   <!-- TOTALE VIEW -->
   <div class="view" id="viewTotale">
     <div class="detail-scroll" id="totaleContent"></div>
@@ -345,7 +347,7 @@
       <button class="btn btn-back" onclick="goList()">← INDIETRO</button>
     </div>
   </div>
-
+ 
   <!-- DETAIL VIEW -->
   <div class="view" id="viewDetail">
     <div class="detail-scroll" id="detailContent"></div>
@@ -354,9 +356,9 @@
       <button class="btn btn-primary" onclick="editCurrent()">✏ MODIFICA</button>
     </div>
   </div>
-
+ 
 </div>
-
+ 
 <script>
 // ─── DATA ───────────────────────────────────────────────────────────
 const NATIONS = [
@@ -413,12 +415,12 @@ const NATIONS = [
   ["🇻🇪","Venezuela"],["🇻🇳","Vietnam"],["🇾🇪","Yemen"],["🇿🇲","Zambia"],
   ["🇿🇼","Zimbabwe"]
 ];
-
+ 
 let missions = [];
 let editingId = null;
 let detailTimer = null;
 let pauseItems = [];
-
+ 
 // ─── STORAGE ────────────────────────────────────────────────────────
 function load() {
   try { missions = JSON.parse(localStorage.getItem('stecco_missions') || '[]'); } catch(e) { missions = []; }
@@ -426,7 +428,7 @@ function load() {
 function save() {
   localStorage.setItem('stecco_missions', JSON.stringify(missions));
 }
-
+ 
 // ─── INIT ────────────────────────────────────────────────────────────
 function init() {
   load();
@@ -438,7 +440,7 @@ function init() {
   });
   renderList();
 }
-
+ 
 // ─── LIST ────────────────────────────────────────────────────────────
 function renderList() {
   const el = document.getElementById('missionsList');
@@ -466,7 +468,7 @@ function renderList() {
     el.appendChild(div);
   });
 }
-
+ 
 // ─── FLAG ────────────────────────────────────────────────────────────
 function getFlagFor(nation) {
   const n = NATIONS.find(([f,nm]) => nm === nation);
@@ -476,7 +478,7 @@ function updateFlag() {
   const v = document.getElementById('fNation').value;
   document.getElementById('fFlag').textContent = getFlagFor(v);
 }
-
+ 
 // ─── NAVIGATION ─────────────────────────────────────────────────────
 function showView(id) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -493,7 +495,7 @@ function goList() {
   if (bt) bt.style.display = '';
   renderList();
 }
-
+ 
 // ─── NEW ─────────────────────────────────────────────────────────────
 function openNew() {
   editingId = null;
@@ -511,7 +513,7 @@ function openNew() {
   document.getElementById('headerTitle').textContent = 'NUOVA MISSIONE';
   showView('viewForm');
 }
-
+ 
 // ─── EDIT ─────────────────────────────────────────────────────────────
 function editCurrent() {
   if (!editingId) return;
@@ -532,7 +534,7 @@ function editCurrent() {
   document.getElementById('headerTitle').textContent = 'MODIFICA';
   showView('viewForm');
 }
-
+ 
 // ─── PAUSE LIST ───────────────────────────────────────────────────────
 function renderPauseList() {
   const el = document.getElementById('pauseList');
@@ -558,7 +560,7 @@ function removePause(i) {
   pauseItems.splice(i,1);
   renderPauseList();
 }
-
+ 
 // ─── SAVE ────────────────────────────────────────────────────────────
 function saveMission() {
   const name = document.getElementById('fName').value.trim();
@@ -567,13 +569,13 @@ function saveMission() {
   const start = document.getElementById('fStart').value;
   const end = document.getElementById('fEnd').value;
   const pay = parseFloat(document.getElementById('fPay').value)||0;
-
+ 
   if (!name) { alert('Inserisci il nome della missione.'); return; }
   if (!start || !end) { alert('Inserisci le date di inizio e fine.'); return; }
   if (start > end) { alert('La data di inizio deve essere prima della fine.'); return; }
-
+ 
   const pauses = pauseItems.filter(p => p.from && p.to && p.from <= p.to);
-
+ 
   if (editingId) {
     const idx = missions.findIndex(x => x.id === editingId);
     if (idx >= 0) missions[idx] = { id: editingId, name, nation, city, start, end, pay, pauses };
@@ -583,7 +585,7 @@ function saveMission() {
   save();
   goList();
 }
-
+ 
 // ─── DELETE ──────────────────────────────────────────────────────────
 function deleteMission() {
   if (!confirm('Eliminare questa missione?')) return;
@@ -592,14 +594,14 @@ function deleteMission() {
   editingId = null;
   goList();
 }
-
+ 
 // ─── CALC ────────────────────────────────────────────────────────────
 function dateToMs(s) { return new Date(s+'T00:00:00').getTime(); }
-
+ 
 function fmt(n) {
   return Number(n).toLocaleString('it-IT', {minimumFractionDigits:2, maximumFractionDigits:2});
 }
-
+ 
 function calcPauseDays(pauses, start, end) {
   if (!pauses || !pauses.length) return 0;
   let total = 0;
@@ -612,16 +614,16 @@ function calcPauseDays(pauses, start, end) {
   });
   return total;
 }
-
+ 
 function calcTotalDays(m) {
   if (!m.start || !m.end) return 0;
   return Math.round((dateToMs(m.end) - dateToMs(m.start)) / 86400000) + 1;
 }
-
+ 
 function calcWorkDays(m) {
   return Math.max(0, calcTotalDays(m) - calcPauseDays(m.pauses, m.start, m.end));
 }
-
+ 
 function calcDaysDone(m) {
   if (!m.start || !m.end) return 0;
   const now = Date.now();
@@ -635,18 +637,18 @@ function calcDaysDone(m) {
   pauses.forEach(p => {
     if (!p.from || !p.to) return;
     const ps = Math.max(dateToMs(p.from), s);
-    const pe = Math.min(dateToMs(p.to), new Date(today+'T23:59:59').getTime());
+    const pe = Math.min(dateToMs(p.to), dateToMs(today));
     if (pe >= ps) pauseConsumed += Math.round((pe - ps) / 86400000) + 1;
   });
   return Math.max(0, calendarDone - pauseConsumed);
 }
-
+ 
 function calcPercent(m) {
   const total = calcWorkDays(m);
   if (!total) return 0;
   return Math.min(100, Math.round(calcDaysDone(m) / total * 100));
 }
-
+ 
 function calcEarned(m) {
   if (!m.start || !m.end || !m.pay) return 0;
   const now = Date.now();
@@ -673,7 +675,7 @@ function calcEarned(m) {
   const totalWorkSec = totalWork * 86400;
   return Math.min(payPerDay * totalWork, (payPerDay * totalWork) * (totalCalSec / totalWorkSec));
 }
-
+ 
 // ─── DETAIL ──────────────────────────────────────────────────────────
 function openDetail(id) {
   editingId = id;
@@ -689,7 +691,7 @@ function openDetail(id) {
     if (mm) updateCounters(mm);
   }, 1000);
 }
-
+ 
 function renderDetail(m) {
   const flag = getFlagFor(m.nation);
   const totalDays = calcTotalDays(m);
@@ -699,11 +701,11 @@ function renderDetail(m) {
   const pct = calcPercent(m);
   const done = calcDaysDone(m);
   const remaining = Math.max(0, workDays - done);
-
+ 
   const pausesHtml = (m.pauses||[]).length
     ? (m.pauses||[]).map(p => `<span class="pause-chip">${p.from} → ${p.to}</span>`).join('')
     : '<span style="color:var(--textDim);font-size:11px">Nessuna pausa</span>';
-
+ 
   document.getElementById('detailContent').innerHTML = `
     <div class="detail-header">
       <div class="detail-flag">${flag}</div>
@@ -713,7 +715,7 @@ function renderDetail(m) {
         <div class="detail-sub">${m.start||'?'} → ${m.end||'?'}</div>
       </div>
     </div>
-
+ 
     <div class="timeline-section">
       <div class="timeline-label">⬛ Timeline · ${totalDays} gg cal. · ${pauseDays} gg pausa</div>
       <div style="display:flex;align-items:center;gap:12px">
@@ -743,7 +745,7 @@ function renderDetail(m) {
         </div>
       </div>
     </div>
-
+ 
     <div class="counter-section">
       <div class="timeline-label">💰 Incassato / Totale</div>
       <div class="counter-row">
@@ -760,7 +762,7 @@ function renderDetail(m) {
         €${fmt(m.pay||0)}/g · ${workDays} gg lav. · €${(((m.pay||0)*workDays)/(workDays*86400)).toFixed(4)}/sec
       </div>
     </div>
-
+ 
     <div class="pauses-section">
       <div class="pauses-title">🟥 Pause</div>
       ${pausesHtml}
@@ -768,7 +770,7 @@ function renderDetail(m) {
   `;
   updateCounters(m);
 }
-
+ 
 function drawPie(pct, pauseFrac) {
   const canvas = document.getElementById('pieChart');
   if (!canvas) return;
@@ -781,7 +783,7 @@ function drawPie(pct, pauseFrac) {
   const doneFrac = pct/100;
   const pauseF = Math.min(pauseFrac, 1 - doneFrac);
   const remFrac = Math.max(0, 1 - doneFrac - pauseF);
-
+ 
   function arc(from, to, color) {
     if (to <= from) return;
     ctx.beginPath();
@@ -802,12 +804,12 @@ function drawPie(pct, pauseFrac) {
   // center hole
   ctx.beginPath(); ctx.arc(cx,cy,r*0.48,0,TAU); ctx.fillStyle='rgba(10,10,10,0.9)'; ctx.fill();
 }
-
+ 
 function updateCounters(m) {
   const earned = calcEarned(m);
   const el = document.getElementById('dtEarned');
   if (el) el.textContent = '€' + fmt(earned);
-
+ 
   const pct = calcPercent(m);
   const done = calcDaysDone(m);
   const workDays = calcWorkDays(m);
@@ -815,7 +817,7 @@ function updateCounters(m) {
   const pauseDays = calcPauseDays(m.pauses, m.start, m.end);
   const remaining = Math.max(0, workDays - done);
   const pauseFrac = totalDays > 0 ? pauseDays/totalDays : 0;
-
+ 
   drawPie(pct, pauseFrac);
   const piePct = document.getElementById('piePct');
   if (piePct) piePct.textContent = pct + '%';
@@ -824,7 +826,7 @@ function updateCounters(m) {
   const dtRem = document.getElementById('dtRem');
   if (dtRem) dtRem.textContent = remaining;
 }
-
+ 
 // ─── TOTALE VIEW ─────────────────────────────────────────────────────
 function openTotale() {
   if (detailTimer) { clearInterval(detailTimer); detailTimer = null; }
@@ -835,7 +837,7 @@ function openTotale() {
   renderTotale();
   detailTimer = setInterval(renderTotale, 1000);
 }
-
+ 
 function renderTotale() {
   const now = Date.now();
   let grandTotal = 0;
@@ -873,23 +875,24 @@ function renderTotale() {
         </div>
       </div>`;
   });
-
+ 
   if (!missions.length) {
     rows = '<div style="text-align:center;padding:40px 20px;color:var(--textDim);font-size:14px">Nessuna missione.</div>';
   }
-
+ 
   document.getElementById('totaleContent').innerHTML = `
     ${rows}
     <div style="background:rgba(245,197,24,0.12);border:2px solid var(--gold);border-radius:8px;padding:14px 16px;margin-top:4px;text-align:center">
       <div style="font-size:11px;color:var(--gold);letter-spacing:3px;font-weight:900;text-transform:uppercase;margin-bottom:6px">★ TOTALE GUADAGNATO ★</div>
       <div style="font-size:32px;font-weight:900;color:var(--gold);text-shadow:0 2px 8px rgba(0,0,0,0.8)">€${fmt(grandTotal)}</div>
-      <div style="font-size:11px;color:var(--textDim);margin-top:4px">${missions.length} missione${missions.length!==1?'i':''} · aggiornato in tempo reale</div>
+      <div style="font-size:11px;color:var(--textDim);margin-top:4px">${missions.length} mission${missions.length!==1?'i':'e'} · aggiornato in tempo reale</div>
     </div>
   `;
 }
-
+ 
 // ─── START ───────────────────────────────────────────────────────────
 init();
 </script>
 </body>
 </html>
+ 
