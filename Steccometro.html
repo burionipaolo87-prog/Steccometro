@@ -317,11 +317,70 @@
 </head>
 <body>
 
+<!-- ========== PIN LOCK ========== -->
+<div id="pin-overlay" style="display:none;position:fixed;inset:0;background:#1a1a1a;z-index:9999;flex-direction:column;align-items:center;justify-content:center;padding:20px;font-family:'Courier New',monospace;">
+  <div style="text-align:center;margin-bottom:32px;">
+    <div style="font-size:48px;margin-bottom:12px;">🔐</div>
+    <div style="color:#f5c518;font-size:20px;font-weight:900;letter-spacing:3px;" id="pin-title">INSERISCI PIN</div>
+    <div style="color:#aaaaaa;font-size:13px;margin-top:6px;letter-spacing:1px;" id="pin-sub">6 cifre per accedere</div>
+  </div>
+  <div style="display:flex;gap:14px;margin-bottom:36px;" id="pin-dots">
+    <div class="pin-dot" id="dot-0"></div>
+    <div class="pin-dot" id="dot-1"></div>
+    <div class="pin-dot" id="dot-2"></div>
+    <div class="pin-dot" id="dot-3"></div>
+    <div class="pin-dot" id="dot-4"></div>
+    <div class="pin-dot" id="dot-5"></div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:260px;">
+    <button class="pin-key" onclick="pinPress('1')">1</button>
+    <button class="pin-key" onclick="pinPress('2')">2</button>
+    <button class="pin-key" onclick="pinPress('3')">3</button>
+    <button class="pin-key" onclick="pinPress('4')">4</button>
+    <button class="pin-key" onclick="pinPress('5')">5</button>
+    <button class="pin-key" onclick="pinPress('6')">6</button>
+    <button class="pin-key" onclick="pinPress('7')">7</button>
+    <button class="pin-key" onclick="pinPress('8')">8</button>
+    <button class="pin-key" onclick="pinPress('9')">9</button>
+    <div></div>
+    <button class="pin-key" onclick="pinPress('0')">0</button>
+    <button class="pin-key pin-del" onclick="pinDel()">⌫</button>
+  </div>
+</div>
+
+<!-- ========== SETTINGS OVERLAY ========== -->
+<div id="settings-overlay" style="display:none;position:fixed;inset:0;z-index:500;" onclick="closeSettingsMenu()"></div>
+<div id="settings-menu" style="display:none;position:fixed;top:70px;left:14px;background:#2a2a2a;border:1px solid rgba(245,197,24,0.4);border-radius:10px;z-index:600;min-width:200px;overflow:hidden;font-family:'Courier New',monospace;">
+  <button onclick="closeSettingsMenu();showCambiaPin()" style="width:100%;padding:14px 18px;text-align:left;background:none;border:none;border-bottom:1px solid rgba(245,197,24,0.2);font-size:14px;font-weight:700;color:#f5c518;cursor:pointer;letter-spacing:1px;">
+    🔑 CAMBIA PASSWORD
+  </button>
+</div>
+
+<style>
+.pin-dot {
+  width:16px;height:16px;border-radius:50%;
+  border:2px solid rgba(245,197,24,0.5);background:transparent;
+  transition:background 0.15s,border-color 0.15s;
+}
+.pin-dot.filled{background:#f5c518;border-color:#f5c518;}
+.pin-dot.error{background:#e63946;border-color:#e63946;}
+.pin-key{
+  background:rgba(245,197,24,0.1);color:#f5c518;border:1px solid rgba(245,197,24,0.3);
+  border-radius:50%;width:78px;height:78px;font-size:26px;font-weight:900;
+  cursor:pointer;font-family:'Courier New',monospace;
+  transition:background 0.1s,transform 0.1s;-webkit-tap-highlight-color:transparent;
+}
+.pin-key:active{background:rgba(245,197,24,0.3);transform:scale(0.94);}
+.pin-del{font-size:20px;}
+@keyframes pinShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-10px)}40%{transform:translateX(10px)}60%{transform:translateX(-8px)}80%{transform:translateX(8px)}}
+.pin-shake{animation:pinShake 0.4s ease;}
+</style>
+
 <div class="app">
 
   <!-- HEADER -->
   <div class="header">
-    <div class="header-star" id="headerLeft">⭐</div>
+    <div class="header-star" id="headerLeft" style="cursor:pointer;" onclick="toggleSettingsMenu()">⚙️</div>
     <div class="header-title" id="headerTitle">STECCOMETRO</div>
     <div class="header-right" id="headerRight"></div>
   </div>
@@ -1221,14 +1280,20 @@ function renderMap() {
 }
 
 // ─── MAP ZOOM & PAN ──────────────────────────────────────────────────
+let mapScale = 1;
+let mapTranslateX = 0;
+let mapTranslateY = 0;
+let mapZoomInitialized = false;
+
 function initMapZoomPan() {
   const container = document.getElementById('mapContainer');
   const svg = document.getElementById('worldSvg');
   if (!container || !svg) return;
 
-  let scale = 1;
-  let translateX = 0;
-  let translateY = 0;
+  // Use global vars
+  let scale = mapScale;
+  let translateX = mapTranslateX;
+  let translateY = mapTranslateY;
   const MIN_SCALE = 1;
   const MAX_SCALE = 8;
 
@@ -1246,6 +1311,10 @@ function initMapZoomPan() {
     const maxY = (scale - 1) * cH / 2;
     translateX = Math.max(-maxX, Math.min(maxX, translateX));
     translateY = Math.max(-maxY, Math.min(maxY, translateY));
+    // Save to globals
+    mapScale = scale;
+    mapTranslateX = translateX;
+    mapTranslateY = translateY;
 
     // Scala solo l'immagine
     const imgGroup = document.getElementById('mapImageGroup');
@@ -1367,16 +1436,199 @@ function initMapZoomPan() {
     const now = Date.now();
     if (now - lastTap < 300 && e.changedTouches.length === 1) {
       scale = 1; translateX = 0; translateY = 0;
+      mapScale = 1; mapTranslateX = 0; mapTranslateY = 0;
       applyTransform();
     }
     lastTap = now;
   });
+
+  // Restore saved state on (re)open
+  applyTransform();
 }
 
 
 
+// ─── PIN SYSTEM ──────────────────────────────────────────────────────
+const PIN_KEY = 'steccometro_pin';
+const PIN_SET_KEY = 'steccometro_pin_set';
+let pinBuffer = '';
+let pinMode = 'unlock';
+let pinTemp = '';
+
+function pinHash(s) {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = Math.imul(31, h) + s.charCodeAt(i) | 0;
+  return h.toString(36);
+}
+function pinPress(d) {
+  if (pinBuffer.length >= 6) return;
+  pinBuffer += d;
+  updatePinDots();
+  if (pinBuffer.length === 6) setTimeout(handlePinComplete, 120);
+}
+function pinDel() { pinBuffer = pinBuffer.slice(0,-1); updatePinDots(); }
+function updatePinDots(state) {
+  for (let i=0;i<6;i++) {
+    const dot = document.getElementById('dot-'+i);
+    dot.className='pin-dot';
+    if (state==='error') dot.classList.add('error');
+    else if (i<pinBuffer.length) dot.classList.add('filled');
+  }
+}
+function handlePinComplete() {
+  const stored = localStorage.getItem(PIN_KEY);
+  const isSet = localStorage.getItem(PIN_SET_KEY);
+  if (!isSet) {
+    if (pinMode==='set') {
+      pinTemp=pinBuffer; pinBuffer=''; pinMode='confirm';
+      document.getElementById('pin-title').textContent='CONFERMA PIN';
+      document.getElementById('pin-sub').textContent='Ripeti le 6 cifre';
+      updatePinDots();
+    } else if (pinMode==='confirm') {
+      if (pinBuffer===pinTemp) {
+        localStorage.setItem(PIN_KEY,pinHash(pinBuffer));
+        localStorage.setItem(PIN_SET_KEY,'1');
+        unlockApp();
+      } else { pinError('PIN NON CORRISPONDE'); }
+    }
+  } else {
+    if (pinHash(pinBuffer)===stored) unlockApp();
+    else pinError('PIN ERRATO');
+  }
+}
+function pinError(msg) {
+  updatePinDots('error');
+  document.getElementById('pin-sub').textContent=msg;
+  document.getElementById('pin-dots').classList.add('pin-shake');
+  setTimeout(()=>{
+    pinBuffer=''; updatePinDots();
+    document.getElementById('pin-dots').classList.remove('pin-shake');
+    document.getElementById('pin-sub').textContent='6 cifre per accedere';
+  },800);
+}
+function unlockApp() {
+  document.getElementById('pin-overlay').style.display='none';
+}
+function initPin() {
+  const overlay = document.getElementById('pin-overlay');
+  overlay.style.display='flex';
+  const isSet=localStorage.getItem(PIN_SET_KEY);
+  if (!isSet) {
+    pinMode='set';
+    document.getElementById('pin-title').textContent='CREA PIN';
+    document.getElementById('pin-sub').textContent='Scegli 6 cifre';
+  } else {
+    pinMode='unlock';
+    document.getElementById('pin-title').textContent='INSERISCI PIN';
+    document.getElementById('pin-sub').textContent='6 cifre per accedere';
+  }
+}
+
+// ─── SETTINGS MENU ───────────────────────────────────────────────────
+function toggleSettingsMenu() {
+  const menu=document.getElementById('settings-menu');
+  const ov=document.getElementById('settings-overlay');
+  const isOpen=menu.style.display==='block';
+  menu.style.display=isOpen?'none':'block';
+  ov.style.display=isOpen?'none':'block';
+}
+function closeSettingsMenu() {
+  document.getElementById('settings-menu').style.display='none';
+  document.getElementById('settings-overlay').style.display='none';
+}
+
+// ─── CAMBIA PIN ───────────────────────────────────────────────────────
+let cambiaBuffer='', cambiaStep='vecchia', cambiaNuovaTemp='';
+
+function showCambiaPin() {
+  cambiaBuffer=''; cambiaStep='vecchia'; cambiaNuovaTemp='';
+  document.getElementById('cambia-pin-overlay').style.display='flex';
+  setCambiaTitle('VECCHIA PASSWORD','Inserisci le 6 cifre attuali');
+  updateCambiaDots();
+}
+function hideCambiaPin() {
+  document.getElementById('cambia-pin-overlay').style.display='none';
+}
+function setCambiaTitle(t,s) {
+  document.getElementById('cambia-pin-title').textContent=t;
+  document.getElementById('cambia-pin-sub').textContent=s;
+}
+function cambiaPress(d) {
+  if (cambiaBuffer.length>=6) return;
+  cambiaBuffer+=d; updateCambiaDots();
+  if (cambiaBuffer.length===6) setTimeout(handleCambiaComplete,120);
+}
+function cambiaDel() { cambiaBuffer=cambiaBuffer.slice(0,-1); updateCambiaDots(); }
+function updateCambiaDots(state) {
+  for (let i=0;i<6;i++) {
+    const dot=document.getElementById('cpd-'+i);
+    dot.className='pin-dot';
+    if (state==='error') dot.classList.add('error');
+    else if (i<cambiaBuffer.length) dot.classList.add('filled');
+  }
+}
+function handleCambiaComplete() {
+  if (cambiaStep==='vecchia') {
+    if (pinHash(cambiaBuffer)===localStorage.getItem(PIN_KEY)) {
+      cambiaBuffer=''; cambiaStep='nuova';
+      setCambiaTitle('NUOVA PASSWORD','Scegli 6 cifre'); updateCambiaDots();
+    } else { cambiaError('PASSWORD ERRATA'); }
+  } else if (cambiaStep==='nuova') {
+    cambiaNuovaTemp=cambiaBuffer; cambiaBuffer=''; cambiaStep='conferma';
+    setCambiaTitle('CONFERMA PASSWORD','Ripeti le 6 cifre'); updateCambiaDots();
+  } else if (cambiaStep==='conferma') {
+    if (cambiaBuffer===cambiaNuovaTemp) {
+      localStorage.setItem(PIN_KEY,pinHash(cambiaBuffer));
+      hideCambiaPin();
+      alert('Password cambiata!');
+    } else { cambiaError('LE PASSWORD NON CORRISPONDONO'); }
+  }
+}
+function cambiaError(msg) {
+  updateCambiaDots('error');
+  document.getElementById('cambia-pin-sub').textContent=msg;
+  document.getElementById('cambia-pin-dots').classList.add('pin-shake');
+  setTimeout(()=>{
+    cambiaBuffer=''; updateCambiaDots();
+    document.getElementById('cambia-pin-dots').classList.remove('pin-shake');
+    document.getElementById('cambia-pin-sub').textContent='6 cifre';
+  },800);
+}
+
 // ─── START ───────────────────────────────────────────────────────────
+initPin();
 init();
 </script>
+<!-- ========== CAMBIA PIN OVERLAY ========== -->
+<div id="cambia-pin-overlay" style="display:none;position:fixed;inset:0;background:#1a1a1a;z-index:9000;flex-direction:column;align-items:center;justify-content:center;padding:20px;font-family:'Courier New',monospace;">
+  <div style="text-align:center;margin-bottom:28px;">
+    <div style="font-size:40px;margin-bottom:10px;">🔑</div>
+    <div style="color:#f5c518;font-size:18px;font-weight:900;letter-spacing:2px;" id="cambia-pin-title">VECCHIA PASSWORD</div>
+    <div style="color:#aaaaaa;font-size:13px;margin-top:6px;letter-spacing:1px;" id="cambia-pin-sub">Inserisci le 6 cifre attuali</div>
+  </div>
+  <div style="display:flex;gap:14px;margin-bottom:32px;" id="cambia-pin-dots">
+    <div class="pin-dot" id="cpd-0"></div>
+    <div class="pin-dot" id="cpd-1"></div>
+    <div class="pin-dot" id="cpd-2"></div>
+    <div class="pin-dot" id="cpd-3"></div>
+    <div class="pin-dot" id="cpd-4"></div>
+    <div class="pin-dot" id="cpd-5"></div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:260px;">
+    <button class="pin-key" onclick="cambiaPress('1')">1</button>
+    <button class="pin-key" onclick="cambiaPress('2')">2</button>
+    <button class="pin-key" onclick="cambiaPress('3')">3</button>
+    <button class="pin-key" onclick="cambiaPress('4')">4</button>
+    <button class="pin-key" onclick="cambiaPress('5')">5</button>
+    <button class="pin-key" onclick="cambiaPress('6')">6</button>
+    <button class="pin-key" onclick="cambiaPress('7')">7</button>
+    <button class="pin-key" onclick="cambiaPress('8')">8</button>
+    <button class="pin-key" onclick="cambiaPress('9')">9</button>
+    <button class="pin-key" style="font-size:13px;letter-spacing:1px;" onclick="hideCambiaPin()">ANN.</button>
+    <button class="pin-key" onclick="cambiaPress('0')">0</button>
+    <button class="pin-key pin-del" onclick="cambiaDel()">⌫</button>
+  </div>
+</div>
+
 </body>
 </html>
