@@ -324,7 +324,7 @@
     <div style="color:#f5c518;font-size:20px;font-weight:900;letter-spacing:3px;" id="pin-title">INSERISCI PIN</div>
     <div style="color:#aaaaaa;font-size:13px;margin-top:6px;letter-spacing:1px;" id="pin-sub">6 cifre per accedere</div>
   </div>
-  <div style="display:flex;gap:14px;margin-bottom:36px;" id="pin-dots">
+  <div style="display:flex;gap:14px;margin-bottom:24px;" id="pin-dots">
     <div class="pin-dot" id="dot-0"></div>
     <div class="pin-dot" id="dot-1"></div>
     <div class="pin-dot" id="dot-2"></div>
@@ -332,6 +332,9 @@
     <div class="pin-dot" id="dot-4"></div>
     <div class="pin-dot" id="dot-5"></div>
   </div>
+  <button id="faceid-unlock-btn" onclick="unlockWithFaceID()" style="display:none;margin-bottom:20px;background:rgba(245,197,24,0.12);border:1px solid rgba(245,197,24,0.45);border-radius:20px;color:#f5c518;font-family:'Courier New',monospace;font-size:13px;font-weight:900;letter-spacing:1px;padding:10px 18px;cursor:pointer;">
+    👤 SBLOCCA CON FACE ID
+  </button>
   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:260px;">
     <button class="pin-key" onclick="pinPress('1')">1</button>
     <button class="pin-key" onclick="pinPress('2')">2</button>
@@ -350,9 +353,21 @@
 
 <!-- ========== SETTINGS OVERLAY ========== -->
 <div id="settings-overlay" style="display:none;position:fixed;inset:0;z-index:500;" onclick="closeSettingsMenu()"></div>
-<div id="settings-menu" style="display:none;position:fixed;top:70px;left:14px;background:#2a2a2a;border:1px solid rgba(245,197,24,0.4);border-radius:10px;z-index:600;min-width:200px;overflow:hidden;font-family:'Courier New',monospace;">
+<div id="settings-menu" style="display:none;position:fixed;top:70px;left:14px;background:#2a2a2a;border:1px solid rgba(245,197,24,0.4);border-radius:10px;z-index:600;min-width:230px;overflow:hidden;font-family:'Courier New',monospace;box-shadow:0 8px 28px rgba(0,0,0,0.45);">
   <button onclick="closeSettingsMenu();showCambiaPin()" style="width:100%;padding:14px 18px;text-align:left;background:none;border:none;border-bottom:1px solid rgba(245,197,24,0.2);font-size:14px;font-weight:700;color:#f5c518;cursor:pointer;letter-spacing:1px;">
     🔑 CAMBIA PASSWORD
+  </button>
+  <button onclick="closeSettingsMenu();enableFaceID()" style="width:100%;padding:14px 18px;text-align:left;background:none;border:none;border-bottom:1px solid rgba(245,197,24,0.2);font-size:14px;font-weight:700;color:#f5c518;cursor:pointer;letter-spacing:1px;" id="faceid-menu-btn">
+    👤 ABILITA FACE ID
+  </button>
+  <button onclick="closeSettingsMenu();exportBackup()" style="width:100%;padding:14px 18px;text-align:left;background:none;border:none;border-bottom:1px solid rgba(245,197,24,0.2);font-size:14px;font-weight:700;color:#f5c518;cursor:pointer;letter-spacing:1px;">
+    ⬇️ ESPORTA BACKUP
+  </button>
+  <button onclick="closeSettingsMenu();importBackup()" style="width:100%;padding:14px 18px;text-align:left;background:none;border:none;border-bottom:1px solid rgba(245,197,24,0.2);font-size:14px;font-weight:700;color:#f5c518;cursor:pointer;letter-spacing:1px;">
+    ⬆️ IMPORTA BACKUP
+  </button>
+  <button onclick="closeSettingsMenu();showInfoModal()" style="width:100%;padding:14px 18px;text-align:left;background:none;border:none;font-size:14px;font-weight:700;color:#f5c518;cursor:pointer;letter-spacing:1px;">
+    ℹ️ INFORMAZIONI
   </button>
 </div>
 
@@ -546,6 +561,9 @@ function load() {
 function save() {
   localStorage.setItem('stecco_missions', JSON.stringify(missions));
 }
+function esc(value) {
+  return String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
+}
 
 // ─── INIT ────────────────────────────────────────────────────────────
 function init() {
@@ -571,14 +589,17 @@ function renderList() {
     const flag = getFlagFor(m.nation);
     const days = calcWorkDays(m);
     const pct = calcPercent(m);
+    const nameSafe = esc(m.name || 'Senza nome');
+    const citySafe = esc(m.city || '');
+    const nationSafe = esc(m.nation || '');
     const div = document.createElement('div');
     div.className = 'mission-card';
     div.onclick = () => openDetail(m.id);
     div.innerHTML = `
       <div class="mission-card-flag">${flag}</div>
       <div class="mission-card-info">
-        <div class="mission-card-name">${m.name||'Senza nome'}</div>
-        <div class="mission-card-sub">${m.city||''}${m.city&&m.nation?' · ':''}${m.nation||''}</div>
+        <div class="mission-card-name">${nameSafe}</div>
+        <div class="mission-card-sub">${citySafe}${m.city&&m.nation?' · ':''}${nationSafe}</div>
         <div class="mission-card-sub">${toDisplay(m.start)||'?'} → ${toDisplay(m.end)||'?'} · ${days} gg lav. · €${fmt((m.pay||0)*days)}</div>
       </div>
       <div style="font-size:20px;color:${pct>=100?'#27ae60':pct>0?'#f5c518':'#555'}">›</div>
@@ -691,12 +712,16 @@ function saveMission() {
   const city = document.getElementById('fCity').value.trim();
   const start = toInternal(document.getElementById('fStart').value);
   const end = toInternal(document.getElementById('fEnd').value);
-  const pay = parseFloat(document.getElementById('fPay').value)||0;
+  const rawPay = document.getElementById('fPay').value.replace(',', '.');
+  const pay = rawPay === '' ? 0 : Number(rawPay);
 
   if (!name) { alert('Inserisci il nome della missione.'); return; }
   if (!start || !end) { alert('Inserisci le date di inizio e fine.'); return; }
   if (start > end) { alert('La data di inizio deve essere prima della fine.'); return; }
+  if (!Number.isFinite(pay) || pay < 0) { alert('La paga giornaliera non può essere negativa o non valida.'); return; }
 
+  const invalidPause = pauseItems.some(p => p.from && p.to && p.from > p.to);
+  if (invalidPause) { alert('Controlla le pause: la data iniziale non può essere dopo quella finale.'); return; }
   const pauses = pauseItems.filter(p => p.from && p.to && p.from <= p.to);
 
   if (editingId) {
@@ -823,13 +848,16 @@ function renderDetail(m) {
   const pausesHtml = (m.pauses||[]).length
     ? (m.pauses||[]).map(p => `<span class="pause-chip">${toDisplay(p.from)} → ${toDisplay(p.to)}</span>`).join('')
     : '<span style="color:var(--textDim);font-size:11px">Nessuna pausa</span>';
+  const nameSafe = esc(m.name || 'MISSIONE');
+  const citySafe = esc(m.city || '');
+  const nationSafe = esc(m.nation || '');
 
   document.getElementById('detailContent').innerHTML = `
     <div class="detail-header">
       <div class="detail-flag">${flag}</div>
       <div>
-        <div class="detail-title">${m.name||'MISSIONE'}</div>
-        <div class="detail-sub">${m.city||''}${m.city&&m.nation?' · ':''}${m.nation||''}</div>
+        <div class="detail-title">${nameSafe}</div>
+        <div class="detail-sub">${citySafe}${m.city&&m.nation?' · ':''}${nationSafe}</div>
         <div class="detail-sub">${toDisplay(m.start)||'?'} → ${toDisplay(m.end)||'?'}</div>
       </div>
     </div>
@@ -968,14 +996,17 @@ function renderTotale() {
     const flag = getFlagFor(m.nation);
     const ended = m.end ? (dateToMs(m.end) + 86400000 - 1 < now) : false;
     const pct = calcPercent(m);
+    const nameSafe = esc(m.name || 'Senza nome');
+    const citySafe = esc(m.city || '');
+    const nationSafe = esc(m.nation || '');
     grandTotal += earned;
     rows += `
       <div style="background:var(--card);border:1px solid var(--border);border-radius:6px;padding:10px 12px;margin-bottom:8px;">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
           <span style="font-size:26px;line-height:1">${flag}</span>
           <div style="flex:1;min-width:0">
-            <div style="font-size:16px;font-weight:900;color:var(--gold);letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.name||'Senza nome'}</div>
-            <div style="font-size:12px;color:var(--textDim);font-weight:bold">${m.city||''}${m.city&&m.nation?' · ':''}${m.nation||''}</div>
+            <div style="font-size:16px;font-weight:900;color:var(--gold);letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nameSafe}</div>
+            <div style="font-size:12px;color:var(--textDim);font-weight:bold">${citySafe}${m.city&&m.nation?' · ':''}${nationSafe}</div>
           </div>
           <div style="text-align:right;flex-shrink:0">
             <div style="font-size:11px;color:${ended?'var(--green)':'var(--gold)'};font-weight:900">${ended?'✓ CONCLUSA':'▶ IN CORSO'}</div>
@@ -1385,6 +1416,10 @@ function initPin() {
     document.getElementById('pin-title').textContent='INSERISCI PIN';
     document.getElementById('pin-sub').textContent='6 cifre per accedere';
   }
+  updateFaceIDUI();
+  if (isSet && localStorage.getItem(FACE_ID_ENABLED_KEY) === '1') {
+    setTimeout(() => unlockWithFaceID(), 350);
+  }
 }
 
 // ─── SETTINGS MENU ───────────────────────────────────────────────────
@@ -1458,6 +1493,158 @@ function cambiaError(msg) {
   },800);
 }
 
+
+// ─── BACKUP LOCALE ───────────────────────────────────────────────────
+function exportBackup() {
+  const payload = {
+    app: 'Steccometro',
+    version: 1,
+    createdAt: new Date().toISOString(),
+    missions
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type: 'application/json'});
+  const date = new Date().toISOString().slice(0,10);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `Steccometro-backup-${date}.json`;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+
+function importBackup() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'application/json,.json';
+  input.onchange = () => {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result);
+        const imported = Array.isArray(data) ? data : data.missions;
+        if (!Array.isArray(imported)) throw new Error('Formato non valido');
+        if (!confirm('Importare questo backup? Le missioni presenti saranno sostituite.')) return;
+        missions = imported.map(m => ({
+          id: String(m.id || Date.now() + Math.random()),
+          name: String(m.name || ''),
+          nation: String(m.nation || ''),
+          city: String(m.city || ''),
+          start: String(m.start || ''),
+          end: String(m.end || ''),
+          pay: Number.isFinite(Number(m.pay)) ? Number(m.pay) : 0,
+          pauses: Array.isArray(m.pauses) ? m.pauses.map(p => ({from:String(p.from || ''), to:String(p.to || '')})) : []
+        }));
+        save();
+        goList();
+        alert('Backup importato correttamente.');
+      } catch (e) {
+        alert('Backup non valido o non leggibile.');
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+// ─── FACE ID / WEBAUTHN LOCALE ───────────────────────────────────────
+const FACE_ID_ENABLED_KEY = 'steccometro_faceid_enabled';
+const FACE_ID_CREDENTIAL_KEY = 'steccometro_faceid_credential';
+
+function bufferToBase64Url(buffer) {
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  bytes.forEach(b => binary += String.fromCharCode(b));
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+function base64UrlToBuffer(value) {
+  const b64 = value.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - value.length % 4) % 4);
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes.buffer;
+}
+function randomChallenge(length = 32) {
+  const bytes = new Uint8Array(length);
+  crypto.getRandomValues(bytes);
+  return bytes;
+}
+function faceIDAvailable() {
+  return window.PublicKeyCredential && navigator.credentials && window.isSecureContext;
+}
+function updateFaceIDUI() {
+  const enabled = localStorage.getItem(FACE_ID_ENABLED_KEY) === '1' && localStorage.getItem(FACE_ID_CREDENTIAL_KEY);
+  const btn = document.getElementById('faceid-unlock-btn');
+  if (btn) btn.style.display = enabled ? 'block' : 'none';
+  const menuBtn = document.getElementById('faceid-menu-btn');
+  if (menuBtn) menuBtn.textContent = enabled ? '👤 FACE ID ATTIVO' : '👤 ABILITA FACE ID';
+}
+async function enableFaceID() {
+  if (!faceIDAvailable()) {
+    alert('Face ID richiede Safari/iOS in modalità sicura, di solito aprendo l’app da una pagina HTTPS e aggiungendola alla schermata Home.');
+    return;
+  }
+  try {
+    const credential = await navigator.credentials.create({
+      publicKey: {
+        challenge: randomChallenge(),
+        rp: { name: 'Steccometro' },
+        user: {
+          id: randomChallenge(16),
+          name: 'steccometro-locale',
+          displayName: 'Steccometro locale'
+        },
+        pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
+        authenticatorSelection: {
+          authenticatorAttachment: 'platform',
+          userVerification: 'required'
+        },
+        timeout: 60000,
+        attestation: 'none'
+      }
+    });
+    localStorage.setItem(FACE_ID_CREDENTIAL_KEY, bufferToBase64Url(credential.rawId));
+    localStorage.setItem(FACE_ID_ENABLED_KEY, '1');
+    updateFaceIDUI();
+    alert('Face ID abilitato su questo dispositivo.');
+  } catch (e) {
+    alert('Face ID non è stato abilitato.');
+  }
+}
+async function unlockWithFaceID() {
+  if (!faceIDAvailable()) {
+    alert('Face ID non è disponibile in questo ambiente.');
+    return;
+  }
+  const credentialId = localStorage.getItem(FACE_ID_CREDENTIAL_KEY);
+  if (!credentialId) {
+    alert('Face ID non è ancora abilitato.');
+    return;
+  }
+  try {
+    await navigator.credentials.get({
+      publicKey: {
+        challenge: randomChallenge(),
+        allowCredentials: [{ type: 'public-key', id: base64UrlToBuffer(credentialId) }],
+        userVerification: 'required',
+        timeout: 60000
+      }
+    });
+    unlockApp();
+  } catch (e) {
+    document.getElementById('pin-sub').textContent = 'Face ID non riuscito. Usa il PIN.';
+  }
+}
+
+// ─── INFORMAZIONI ────────────────────────────────────────────────────
+function showInfoModal() {
+  document.getElementById('info-modal').style.display = 'flex';
+}
+function closeInfoModal() {
+  document.getElementById('info-modal').style.display = 'none';
+}
+
 // ─── START ───────────────────────────────────────────────────────────
 initPin();
 init();
@@ -1490,6 +1677,20 @@ init();
     <button class="pin-key" style="font-size:13px;letter-spacing:1px;" onclick="hideCambiaPin()">ANN.</button>
     <button class="pin-key" onclick="cambiaPress('0')">0</button>
     <button class="pin-key pin-del" onclick="cambiaDel()">⌫</button>
+  </div>
+</div>
+
+
+<!-- ========== INFO MODAL ========== -->
+<div id="info-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:9200;align-items:center;justify-content:center;padding:20px;font-family:'Courier New',monospace;">
+  <div style="width:100%;max-width:360px;background:#2a2a2a;border:1px solid rgba(245,197,24,0.55);border-radius:12px;padding:24px 20px;box-shadow:0 18px 50px rgba(0,0,0,0.55);color:#fff;text-align:left;">
+    <div style="font-size:22px;font-weight:900;color:#f5c518;letter-spacing:2px;text-align:center;margin-bottom:20px;">Steccometro</div>
+    <div style="font-size:15px;line-height:1.65;color:#ffffff;white-space:pre-line;">Creato da M.G.74
+© 2026
+
+Applicazione locale per la gestione delle missioni.
+I dati restano salvati solo su questo dispositivo.</div>
+    <button onclick="closeInfoModal()" style="width:100%;margin-top:22px;background:#f5c518;color:#222;border:none;border-radius:6px;padding:12px 14px;font-family:'Courier New',monospace;font-size:15px;font-weight:900;letter-spacing:1px;cursor:pointer;">OK</button>
   </div>
 </div>
 
