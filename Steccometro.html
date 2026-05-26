@@ -755,22 +755,13 @@ function calcDaysDone(m) {
   const now = Date.now();
   const s = dateToMs(m.start), e = dateToMs(m.end);
   if (now < s) return 0;
-  if (now > e) return calcWorkDays(m);
-  const calendarDone = Math.round((now - s) / 86400000);
-  const pauses = m.pauses||[];
-  let pauseConsumed = 0;
-  const today = new Date().toISOString().split('T')[0];
-  pauses.forEach(p => {
-    if (!p.from || !p.to) return;
-    const ps = Math.max(dateToMs(p.from), s);
-    const pe = Math.min(dateToMs(p.to), dateToMs(today));
-    if (pe >= ps) pauseConsumed += Math.round((pe - ps) / 86400000) + 1;
-  });
-  return Math.max(0, calendarDone - pauseConsumed);
+  if (now > e) return calcTotalDays(m);
+  // Giorni calendari dall'inizio a oggi incluso (pausa compresa)
+  return Math.round((now - s) / 86400000) + 1;
 }
 
 function calcPercent(m) {
-  const total = calcWorkDays(m);
+  const total = calcTotalDays(m);
   if (!total) return 0;
   return Math.min(100, Math.round(calcDaysDone(m) / total * 100));
 }
