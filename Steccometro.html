@@ -818,7 +818,7 @@ function renderDetail(m) {
   const total = (m.pay||0) * workDays;
   const pct = calcPercent(m);
   const done = calcDaysDone(m);
-  const remaining = Math.max(0, workDays - done);
+  const remaining = Math.max(0, Math.round((dateToMs(m.end) - Date.now()) / 86400000));
 
   const pausesHtml = (m.pauses||[]).length
     ? (m.pauses||[]).map(p => `<span class="pause-chip">${toDisplay(p.from)} → ${toDisplay(p.to)}</span>`).join('')
@@ -933,7 +933,7 @@ function updateCounters(m) {
   const workDays = calcWorkDays(m);
   const totalDays = calcTotalDays(m);
   const pauseDays = calcPauseDays(m.pauses, m.start, m.end);
-  const remaining = Math.max(0, workDays - done);
+  const remaining = Math.max(0, Math.round((dateToMs(m.end) - Date.now()) / 86400000));
   const pauseFrac = totalDays > 0 ? pauseDays/totalDays : 0;
 
   drawPie(pct, pauseFrac);
