@@ -1495,21 +1495,158 @@ function cambiaError(msg) {
 
 
 // ─── BACKUP LOCALE ───────────────────────────────────────────────────
-function exportBackup() {
-  const payload = {
+
+// ─── BACKUP CRIPTATO / IMPORT ────────────────────────────────────────
+function cryptoAvailable() {
+  return !!(window.crypto && crypto.subtle && crypto.getRandomValues);
+}
+
+function bytesToBase64(bytes) {
+  let binary = '';
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+  }
+  return btoa(binary);
+}
+
+function base64ToBytes(value) {
+  const binary = atob(value);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+function textToBytes(value) {
+  return new TextEncoder().encode(value);
+}
+
+function bytesToText(bytes) {
+  return new TextDecoder().decode(bytes);
+}
+
+async function deriveBackupKey(password, salt, iterations) {
+  const baseKey = await crypto.subtle.importKey(
+    'raw',
+    textToBytes(password),
+    { name: 'PBKDF2' },
+    false,
+    ['deriveKey']
+  );
+  return crypto.subtle.deriveKey(
+    {
+      name: 'PBKDF2',
+      salt,
+      iterations,
+      hash: 'SHA-256'
+    },
+    baseKey,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt', 'decrypt']
+  );
+}
+
+async function encryptBackupPayload(payload, password) {
+  const iterations = 250000;
+  const salt = new Uint8Array(16);
+  const iv = new Uint8Array(12);
+  crypto.getRandomValues(salt);
+  crypto.getRandomValues(iv);
+  const key = await deriveBackupKey(password, salt, iterations);
+  const encrypted = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    textToBytes(JSON.stringify(payload))
+  );
+
+  return {
     app: 'Steccometro',
-    version: 1,
+    backupType: 'encrypted',
+    version: 2,
     createdAt: new Date().toISOString(),
-    missions
+    crypto: {
+      algorithm: 'AES-GCM',
+      kdf: 'PBKDF2',
+      hash: 'SHA-256',
+      iterations,
+      salt: bytesToBase64(salt),
+      iv: bytesToBase64(iv)
+    },
+    data: bytesToBase64(new Uint8Array(encrypted))
   };
-  const blob = new Blob([JSON.stringify(payload, null, 2)], {type: 'application/json'});
-  const date = new Date().toISOString().slice(0,10);
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `Steccometro-backup-${date}.json`;
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+
+async function decryptBackupPayload(data, password) {
+  if (!data || data.backupType !== 'encrypted' || !data.crypto || !data.data) {
+    throw new Error('Backup non criptato o formato non valido');
+  }
+
+  const salt = base64ToBytes(data.crypto.salt);
+  const iv = base64ToBytes(data.crypto.iv);
+  const encrypted = base64ToBytes(data.data);
+  const iterations = Number(data.crypto.iterations || 250000);
+  const key = await deriveBackupKey(password, salt, iterations);
+  const decrypted = await crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    encrypted
+  );
+  return JSON.parse(bytesToText(new Uint8Array(decrypted)));
+}
+
+async function exportBackup() {
+  if (!cryptoAvailable()) {
+    alert('Backup criptato non disponibile in questo ambiente. Apri l’app da Safari/iPhone in modalità sicura, preferibilmente da pagina HTTPS aggiunta alla schermata Home.');
+    return;
+  }
+
+  const password = prompt('Scegli una password per criptare il backup. Senza questa password il backup non potrà essere recuperato.');
+  if (!password) return;
+  if (password.length < 6) {
+    alert('Usa una password di almeno 6 caratteri.');
+    return;
+  }
+  const conferma = prompt('Ripeti la password del backup.');
+  if (conferma !== password) {
+    alert('Le password non coincidono. Backup annullato.');
+    return;
+  }
+
+  try {
+    const payload = {
+      app: 'Steccometro',
+      version: 2,
+      createdAt: new Date().toISOString(),
+      missions
+    };
+    const encryptedPayload = await encryptBackupPayload(payload, password);
+    const blob = new Blob([JSON.stringify(encryptedPayload, null, 2)], {type: 'application/json'});
+    const date = new Date().toISOString().slice(0,10);
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `Steccometro-backup-criptato-${date}.json`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+    alert('Backup criptato creato. Conserva la password: non può essere recuperata.');
+  } catch (e) {
+    alert('Errore durante la creazione del backup criptato.');
+  }
+}
+
+function normalizeImportedMissions(imported) {
+  if (!Array.isArray(imported)) throw new Error('Formato non valido');
+  return imported.map(m => ({
+    id: String(m.id || Date.now() + Math.random()),
+    name: String(m.name || ''),
+    nation: String(m.nation || ''),
+    city: String(m.city || ''),
+    start: String(m.start || ''),
+    end: String(m.end || ''),
+    pay: Number.isFinite(Number(m.pay)) ? Number(m.pay) : 0,
+    pauses: Array.isArray(m.pauses) ? m.pauses.map(p => ({from:String(p.from || ''), to:String(p.to || '')})) : []
+  }));
 }
 
 function importBackup() {
@@ -1520,22 +1657,30 @@ function importBackup() {
     const file = input.files && input.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => {
+    reader.onload = async () => {
       try {
         const data = JSON.parse(reader.result);
-        const imported = Array.isArray(data) ? data : data.missions;
-        if (!Array.isArray(imported)) throw new Error('Formato non valido');
+        let payload = data;
+
+        if (data && data.backupType === 'encrypted') {
+          if (!cryptoAvailable()) {
+            alert('Questo backup è criptato, ma la crittografia non è disponibile in questo ambiente.');
+            return;
+          }
+          const password = prompt('Inserisci la password del backup criptato.');
+          if (!password) return;
+          try {
+            payload = await decryptBackupPayload(data, password);
+          } catch (e) {
+            alert('Password errata o backup criptato danneggiato.');
+            return;
+          }
+        }
+
+        const imported = Array.isArray(payload) ? payload : payload.missions;
+        const normalized = normalizeImportedMissions(imported);
         if (!confirm('Importare questo backup? Le missioni presenti saranno sostituite.')) return;
-        missions = imported.map(m => ({
-          id: String(m.id || Date.now() + Math.random()),
-          name: String(m.name || ''),
-          nation: String(m.nation || ''),
-          city: String(m.city || ''),
-          start: String(m.start || ''),
-          end: String(m.end || ''),
-          pay: Number.isFinite(Number(m.pay)) ? Number(m.pay) : 0,
-          pauses: Array.isArray(m.pauses) ? m.pauses.map(p => ({from:String(p.from || ''), to:String(p.to || '')})) : []
-        }));
+        missions = normalized;
         save();
         goList();
         alert('Backup importato correttamente.');
