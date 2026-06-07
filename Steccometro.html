@@ -78,11 +78,17 @@
   }
 
   .header-title {
-    font-size: 24px; font-weight: 900; letter-spacing: 4px;
+    font-size: clamp(16px, 5vw, 22px); font-weight: 900; letter-spacing: clamp(1px, 0.9vw, 3px);
     color: var(--gold); text-transform: uppercase; text-shadow: 0 2px 8px rgba(0,0,0,0.8);
     text-align: center; justify-self: center; width: 100%; min-width: 0;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    white-space: nowrap; overflow: visible; text-overflow: clip;
     grid-column: 2;
+  }
+
+  @media (max-width: 360px) {
+    .header { grid-template-columns: 36px 1fr 36px; padding-left: 10px; padding-right: 10px; }
+    .header-star, .header-right { width: 36px; }
+    .header-title { font-size: 15px; letter-spacing: 1px; }
   }
 
   .header-right { width: 44px; text-align: right; justify-self: end; }
@@ -316,6 +322,42 @@
     padding: 5px 8px; opacity: 1;
     background: rgba(0,0,0,0.72); border-radius: 3px; margin: 4px 0;
   }
+
+
+  /* MAP ZOOM CONTROLS */
+  #viewMap { position: relative; }
+  .map-zoom-controls {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: auto;
+  }
+  .map-zoom-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 2px solid var(--gold);
+    background: rgba(10,10,10,0.88);
+    color: var(--gold);
+    font-size: 26px;
+    font-weight: 900;
+    line-height: 1;
+    font-family: 'Courier New', monospace;
+    cursor: pointer;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .map-zoom-btn:active {
+    transform: scale(0.94);
+    background: rgba(245,197,24,0.18);
+  }
 </style>
 </head>
 <body>
@@ -479,6 +521,10 @@
 
   <!-- MAP VIEW -->
   <div class="view" id="viewMap">
+    <div class="map-zoom-controls" aria-label="Comandi zoom mappa">
+      <button type="button" class="map-zoom-btn" onclick="zoomMapButton(1)" aria-label="Aumenta zoom">+</button>
+      <button type="button" class="map-zoom-btn" onclick="zoomMapButton(-1)" aria-label="Riduci zoom">−</button>
+    </div>
     <div style="flex:1;overflow:auto;position:relative;-webkit-overflow-scrolling:touch;touch-action:none;" id="mapContainer">
       <div id="mapPins"></div>
     </div>
@@ -1348,6 +1394,15 @@ function zoomMapAt(newScale, clientX, clientY) {
 
   container.scrollLeft = Math.max(0, mapX * newScale - cx);
   container.scrollTop = Math.max(0, mapY * newScale - cy);
+}
+
+
+function zoomMapButton(direction) {
+  const container = document.getElementById('mapContainer');
+  if (!container) return;
+  const rect = container.getBoundingClientRect();
+  const factor = direction > 0 ? 1.18 : 0.85;
+  zoomMapAt(mapScale * factor, rect.left + rect.width / 2, rect.top + rect.height / 2);
 }
 
 function initMapZoomPan() {
