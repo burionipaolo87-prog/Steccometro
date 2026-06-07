@@ -65,7 +65,7 @@
 
   /* HEADER */
   .header {
-    display: flex; align-items: center; justify-content: space-between;
+    display: grid; grid-template-columns: 44px 1fr 44px; align-items: center;
     padding: 10px 16px 8px;
     border-bottom: 1px solid var(--border);
     background: rgba(0,0,0,0.72);
@@ -74,15 +74,18 @@
   }
 
   .header-star {
-    font-size: 28px; line-height: 1;
+    font-size: 28px; line-height: 1; width: 44px; text-align: center; justify-self: start;
   }
 
   .header-title {
     font-size: 24px; font-weight: 900; letter-spacing: 4px;
     color: var(--gold); text-transform: uppercase; text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+    text-align: center; justify-self: center; width: 100%; min-width: 0;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    grid-column: 2;
   }
 
-  .header-right { width: 36px; text-align: right; }
+  .header-right { width: 44px; text-align: right; justify-self: end; }
 
   /* VIEWS */
   .view { display: none; flex-direction: column; flex: 1; overflow: hidden; }
@@ -451,7 +454,7 @@
       </div>
       <div class="form-group">
         <label class="form-label">Paga Giornaliera (€)</label>
-        <input type="number" id="fPay" placeholder="Es. 350" min="0" step="1">
+        <input type="number" id="fPay" placeholder="Es. 100" min="0" step="1">
       </div>
       <div class="section-divider">✦ PAUSE ✦</div>
       <div class="form-group" style="margin-top:6px">
@@ -476,7 +479,7 @@
 
   <!-- MAP VIEW -->
   <div class="view" id="viewMap">
-    <div style="flex:1;overflow-x:auto;overflow-y:hidden;position:relative;-webkit-overflow-scrolling:touch;" id="mapContainer">
+    <div style="flex:1;overflow:auto;position:relative;-webkit-overflow-scrolling:touch;touch-action:none;" id="mapContainer">
       <div id="mapPins"></div>
     </div>
     <div class="form-actions">
@@ -913,7 +916,7 @@ function renderDetail(m) {
     </div>
 
     <div class="pauses-section">
-      <div class="pauses-title">🟥 Pause</div>
+      <div class="pauses-title"><span style="color:#666">■</span> Pause</div>
       ${pausesHtml}
     </div>
   `;
@@ -1186,7 +1189,7 @@ function openMap() {
   renderMap();
 }
 
-function renderMap() {
+function renderMap(centerAfterRender = true) {
   const container = document.getElementById('mapContainer');
   const W = container.clientWidth || window.innerWidth;
   const H = container.clientHeight || (window.innerHeight - 100);
@@ -1195,8 +1198,8 @@ function renderMap() {
 
   // Mappa full-height: altezza = container height, larghezza proporzionale
   const PNG_RATIO_VAL = 900 / 614;
-  const mapH = H;
-  const mapW = Math.round(H * PNG_RATIO_VAL);
+  const mapH = Math.max(H, Math.round(H * mapScale));
+  const mapW = Math.round(mapH * PNG_RATIO_VAL);
 
   let svgContent = `<svg id="worldSvg" viewBox="0 0 ${mapW} ${mapH}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:${mapW}px;height:${mapH}px;display:block;flex-shrink:0;">`;
   svgContent += `<g id="mapImageGroup"><image href="data:image/png;base64,${MAP_B64}" x="0" y="0" width="${mapW}" height="${mapH}" preserveAspectRatio="none"/></g>`;
@@ -1219,8 +1222,8 @@ function renderMap() {
     if (!coords) return;
     const [lat, lon] = coords;
     const PNG_RATIO_LOCAL = 900/614;
-    const mapHH = H;
-    const mapWW = Math.round(H * PNG_RATIO_LOCAL);
+    const mapHH = mapH;
+    const mapWW = mapW;
     const [px, py] = latlonToXY(lat, lon, mapWW, mapHH);
     const flag = getFlagFor(nation);
     const count = ms.length;
@@ -1299,8 +1302,8 @@ function renderMap() {
 
   if (!missions.length) {
     const t = document.createElementNS('http://www.w3.org/2000/svg','text');
-    const mapWW2 = Math.round(H * 900/614);
-    t.setAttribute('x', (mapWW2/2).toFixed(0)); t.setAttribute('y', (H/2).toFixed(0));
+    const mapWW2 = mapW;
+    t.setAttribute('x', (mapWW2/2).toFixed(0)); t.setAttribute('y', (mapH/2).toFixed(0));
     t.setAttribute('text-anchor','middle'); t.setAttribute('fill','rgba(0,0,0,0.5)');
     t.setAttribute('font-size','16'); t.setAttribute('font-family','Courier New, monospace');
     t.textContent = 'Nessuna missione da visualizzare';
@@ -1308,18 +1311,90 @@ function renderMap() {
   }
 
   initMapZoomPan();
-  setTimeout(centerMapOnPins, 50);
+  if (centerAfterRender) setTimeout(centerMapOnPins, 50);
 }
 
 // ─── MAP ZOOM & PAN ──────────────────────────────────────────────────
-let mapScale = 1;
+let mapScale = 1.45;
 let mapTranslateX = 0;
 let mapTranslateY = 0;
 let mapZoomInitialized = false;
 
+function clampMapScale(v) {
+  return Math.max(1, Math.min(3.2, v));
+}
+
+function touchDistance(t1, t2) {
+  const dx = t1.clientX - t2.clientX;
+  const dy = t1.clientY - t2.clientY;
+  return Math.sqrt(dx*dx + dy*dy);
+}
+
+function zoomMapAt(newScale, clientX, clientY) {
+  const container = document.getElementById('mapContainer');
+  if (!container) return;
+  const oldScale = mapScale || 1;
+  newScale = clampMapScale(newScale);
+  if (Math.abs(newScale - oldScale) < 0.01) return;
+
+  const rect = container.getBoundingClientRect();
+  const cx = clientX - rect.left;
+  const cy = clientY - rect.top;
+  const mapX = (container.scrollLeft + cx) / oldScale;
+  const mapY = (container.scrollTop + cy) / oldScale;
+
+  mapScale = newScale;
+  renderMap(false);
+
+  container.scrollLeft = Math.max(0, mapX * newScale - cx);
+  container.scrollTop = Math.max(0, mapY * newScale - cy);
+}
+
 function initMapZoomPan() {
-  // Scroll nativo orizzontale - nessun JS necessario
-  // Il centering sulle bandierine viene fatto dopo il render
+  const container = document.getElementById('mapContainer');
+  if (!container || container.dataset.zoomReady === '1') return;
+  container.dataset.zoomReady = '1';
+
+  let pinchStartDist = 0;
+  let pinchStartScale = mapScale;
+  let pinchCenterX = 0;
+  let pinchCenterY = 0;
+  let lastPinchRender = 0;
+
+  container.addEventListener('wheel', (e) => {
+    if (!e.ctrlKey) return;
+    e.preventDefault();
+    const factor = e.deltaY < 0 ? 1.12 : 0.88;
+    zoomMapAt(mapScale * factor, e.clientX, e.clientY);
+  }, { passive: false });
+
+  container.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 2) {
+      pinchStartDist = touchDistance(e.touches[0], e.touches[1]);
+      pinchStartScale = mapScale;
+      pinchCenterX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      pinchCenterY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      lastPinchRender = 0;
+    }
+  }, { passive: false });
+
+  container.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 2 && pinchStartDist > 0) {
+      e.preventDefault();
+      const now = Date.now();
+      if (now - lastPinchRender < 80) return;
+      lastPinchRender = now;
+      const dist = touchDistance(e.touches[0], e.touches[1]);
+      const targetScale = pinchStartScale * (dist / pinchStartDist);
+      pinchCenterX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      pinchCenterY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      zoomMapAt(targetScale, pinchCenterX, pinchCenterY);
+    }
+  }, { passive: false });
+
+  container.addEventListener('touchend', (e) => {
+    if (e.touches && e.touches.length < 2) pinchStartDist = 0;
+  }, { passive: true });
 }
 
 function centerMapOnPins() {
